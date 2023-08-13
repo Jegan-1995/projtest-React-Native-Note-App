@@ -22,4 +22,4 @@ jobs:
         with:
           name: jenkins-artifacts
           path: |
-            reactattifact/android/gradlew
+            reactattifact/android/build.gradle
