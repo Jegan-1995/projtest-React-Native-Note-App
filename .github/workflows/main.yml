@@ -1,0 +1,21 @@
+name: Upload Jenkins Artifacts
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  upload-artifacts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: jenkins-artifacts
+          path: /var/lib/jenkins/workspace/job-name/reactattifact/android
+
