@@ -1,0 +1,159 @@
+docker pull node:18.16.0
+
+   1  ls
+    2  cd android/
+    3  ./gradlew assembleRelease
+    4  ls
+    5  cd app/
+    6  ls
+    7  cd ..
+    8  cd ..
+    9  ls
+   10  cd android/
+   11  cd app/
+   12  ls
+   13  cd  ..
+   14  cd ..
+   15  ls
+   16  npm -v
+   17  node -v
+   18  npm install
+   19  npm fund
+   20  npm install -g @react-native-community/cli
+   21  npm update
+   22  npm -v
+   23  npm start -- --reset-cache
+   24  history
+
+
+# Use the official Node.js 18.16.0 image as the base image
+FROM node:18.16.0
+
+# Set working directory
+WORKDIR /app
+
+# Install necessary packages and utilities
+RUN apt-get update && apt-get install -y \
+    default-jdk \
+    unzip \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables for Android SDK
+ENV ANDROID_HOME /app/android-sdk
+ENV PATH $PATH:$ANDROID_HOME/cmdline-tools/tools/bin:$ANDROID_HOME/platform-tools
+
+# Download and install Android SDK command-line tools
+RUN mkdir -p $ANDROID_HOME/cmdline-tools \
+    && cd $ANDROID_HOME/cmdline-tools \
+    && wget -q https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip -O cmdline-tools.zip \
+    && unzip -q cmdline-tools.zip \
+    && mv cmdline-tools latest \
+    && rm cmdline-tools.zip
+
+# Accept Android licenses
+RUN yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+
+# Install Android build tools and platform
+RUN $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;30.0.3" "platforms;android-30"
+
+# Copy package.json and package-lock.json to the working directory
+COPY package.json package-lock.json ./
+
+# Install npm
+RUN npm install
+
+# Copy the rest of the app files, including gradlew script
+COPY . .
+
+WORKDIR /app/android/app
+
+# Make the gradlew script executable
+RUN chmod +x gradlew
+
+# Build the APK using Gradle
+RUN ./gradlew assembleRelease
+
+
+------------------------------------------------------------------------
+
+pipeline {
+    agent any
+    stages {
+        stage('Pull Code From GitHub') {
+            steps {
+                git 'https://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@github.com/Jegan-1995/projtest-React-Native-Note-App.git'
+            }
+        }
+        stage('Build the Docker image') {
+            steps {
+                script {
+                def dockerHubUsername = 'jegan1995'
+                def dockerHubPassword = 'Docker@2022#'
+                sh 'docker build -t reactapp /var/lib/jenkins/workspace/reactapp'
+                sh 'docker tag newimage jegan1995/reactapp:latest'
+                sh 'docker tag newimage jegan1995/reactapp:${BUILD_NUMBER}'
+                }
+            }
+        }
+        
+        stage('Push the Docker image') {
+            steps {
+                sh 'docker image push jegan1995/reactapp:latest'
+                sh 'docker image push jegan1995/reactapp:${BUILD_NUMBER}'
+            }
+        }
+        stage('Build Android APK') {
+            steps {
+                // Build Android APK using Gradle
+                sh './gradlew assembleRelease'
+            }
+        }
+
+        stage('Build iOS IPA') {
+            steps {
+                // Build iOS IPA using xcodebuild
+                sh 'xcodebuild -scheme MyScheme -configuration Release -archivePath build/MyApp.xcarchive archive'
+                sh 'xcodebuild -exportArchive -archivePath build/MyApp.xcarchive -exportPath build -exportOptionsPlist ExportOptions.plist'
+            }
+        }
+        post {
+            success {
+                archiveArtifacts artifacts: '**/app-release.apk', allowEmptyArchive: true
+            }
+        }
+//        stage('Deploy on Kubernetes') {
+  //          steps {
+    //            sh 'kubectl apply -f /var/lib/jenkins/workspace/kuber/pod.yaml'
+      //          sh 'kubectl rollout restart deployment loadbalancer-pod'
+        //    }
+        //}
+    }
+}
+
+
+
+name: Upload Jenkins Artifacts
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  upload-artifacts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Navigate to Source Code Directory
+        run: cd /var/lib/jenkins/workspace/reactattifact/android
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: jenkins-artifacts
+          path: |
+            gradlew
