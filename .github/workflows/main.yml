@@ -3,7 +3,7 @@ name: Upload Jenkins Artifacts
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   upload-artifacts:
@@ -19,4 +19,3 @@ jobs:
           name: jenkins-artifacts
           path: |
             gradlew
-            build.gradle
