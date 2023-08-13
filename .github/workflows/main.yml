@@ -3,7 +3,7 @@ name: Upload Jenkins Artifacts
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   upload-artifacts:
@@ -13,9 +13,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: List Workspace Contents
+        run: |
+          ls -R $GITHUB_WORKSPACE
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
           name: jenkins-artifacts
           path: |
+            reactattifact/android/gradlew
             reactattifact/android/build.gradle
