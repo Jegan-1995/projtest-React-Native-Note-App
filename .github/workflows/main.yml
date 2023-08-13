@@ -12,10 +12,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
-       - name: Navigate to Source Code Directory
-          run: cd path/to/source/code
-
+      
+      - name: Navigate to Source Code Directory
+        run: cd /var/lib/jenkins/workspace/reactattifact/android
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
