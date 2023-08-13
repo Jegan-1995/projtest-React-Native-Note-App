@@ -17,5 +17,5 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: jenkins-artifacts
-          path: /var/lib/jenkins/workspace/reactattifact/android
+          path: /var/lib/jenkins/workspace/reactattifact/android/gradlew*
 
